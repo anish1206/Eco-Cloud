@@ -1,0 +1,10 @@
+{
+  "forecast": {
+    "timestamp": "",
+    "predictions": [],
+    "metrics": {
+      "accuracy": 0.0,
+      "rmse": 0.0
+    }
+  }
+}
