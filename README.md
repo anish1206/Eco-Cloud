@@ -116,16 +116,12 @@ graph TD
 ## Part 2: Data Structures & Algorithms (Core Engine)
 
 These are implemented manually without STL shortcuts.
-
----
-
 ### 1. Fibonacci Heap
 
 **Role:** Dynamic ready queue.
 
 **Why:** Supports efficient priority updates in O(1) amortized time.
 
----
 
 ### 2. Splay Tree
 
@@ -133,43 +129,33 @@ These are implemented manually without STL shortcuts.
 
 **Why:** Exploits locality of reference for fast repeated access.
 
----
 
 ### 3. Trie / Compressed Trie
 
 **Role:** Efficient job ID storage.
 
----
 
 ### 4. B-Tree
 
 **Role:** Disk indexing and log storage.
 
----
-
 ### 5. Huffman Coding
 
 **Role:** Compression of simulation logs.
-
----
 
 ### 6. Bin Packing
 
 **Role:** Energy-efficient server consolidation.
 
----
 
 ### 7. Graph Algorithms
 
 **Role:** Network routing and energy-aware communication.
 
----
-
 ### 8. ARIMA Forecasting
 
 **Role:** Carbon intensity prediction.
 
----
 
 ## Part 3: Machine Learning Intelligence
 
