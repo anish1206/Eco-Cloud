@@ -266,37 +266,37 @@ git checkout -b feature/your-task-name
     participant Q as Ready Queue (Shared Memory)
     participant Core1 as CPU Core 1 (Consumer)
     participant Core2 as CPU Core 2 (Consumer)
-    participant S1 as Energy Source 1
-    participant S2 as Energy Source 2
+    participant Src1 as Energy Source 1
+    participant Src2 as Energy Source 2
 
     Main->>Prod: pthread_create()
     Main->>Core1: pthread_create()
     Main->>Core2: pthread_create()
-
+    
     rect rgb(230, 245, 255)
         Note over Prod: Concept: Process Creation
         Prod->>Prod: Create PCB (PID, Burst, Mode: USER)
         Note over Prod: [STATE: NEW]
     end
 
-    %% PRODUCER LOGIC
+    %% PRODUCER LOGIC 
     Note over Prod, Q: Concept: Semaphores & Mutex (Bounded Buffer)
     alt Queue Capacity is Full (empty_slots == 0)
         Prod-->>Prod: sem_wait(&empty_slots) -> THREAD BLOCKED
     else Queue has Space
         Prod->>Q: sem_wait(&empty_slots) -> PROCEED
         Prod->>Q: pthread_mutex_lock(&queue_mutex)
-
+        
         Q-->>Q: Insert PCB into Ready Queue
         Note over Q: [STATE: NEW] ➔ [STATE: READY]
-
+        
         Q->>Prod: pthread_mutex_unlock(&queue_mutex)
         Prod->>Core1: sem_post(&full_slots) -> WAKES IDLE CPU
     end
 
     %% CONSUMER LOGIC (SHOWING BOTH CORES)
     Note over Core1, Core2: Concept: Multi-Core Synchronization
-
+    
     %% CORE 2 SCENARIO (EMPTY QUEUE)
     alt Queue is Empty (full_slots == 0)
         Core2-->>Core2: sem_wait(&full_slots) -> CORE 2 GOES TO SLEEP
@@ -306,7 +306,7 @@ git checkout -b feature/your-task-name
     alt Queue has Jobs (full_slots > 0)
         Core1->>Q: sem_wait(&full_slots) -> PROCEED
         Core1->>Q: pthread_mutex_lock(&queue_mutex)
-
+        
         Q-->>Core1: Extract PCB from Ready Queue
         Core1->>Q: pthread_mutex_unlock(&queue_mutex)
         Core1->>Prod: sem_post(&empty_slots) -> WAKES PRODUCER
@@ -321,30 +321,30 @@ git checkout -b feature/your-task-name
 
     %% SYSTEM CALLS & HARDWARE ACCESS
     rect rgb(255, 245, 245)
-        Note over Core1, S1: Concept: Privilege Escalation & System Calls
+        Note over Core1, Src1: Concept: Privilege Escalation & System Calls
         Core1->>Core1: trigger sim_request_resource()
         Core1->>Core1: Mode = KERNEL_MODE
-
-        Core1->>S1: pthread_mutex_lock(&energy_mutex)
-
+        
+        Core1->>Src1: pthread_mutex_lock(&energy_mutex)
+        
         rect rgb(255, 240, 245)
-            Note over S1, S2: Concept: Banker's Algorithm (Deadlock Avoidance)
-            S1->>S1: bankers_request_resources()
-
+            Note over Src1, Src2: Concept: Banker's Algorithm (Deadlock Avoidance)
+            Src1->>Src1: bankers_request_resources()
+            
             alt Allocation Does NOT Lead to Unsafe State
-                S1-->>S2: Tentatively Allocate Resources
-                S1-->>S1: bankers_is_safe() ➔ TRUE
-                S1-->>S2: GRANT Request (System remains safe)
-                Note over S1, S2: Resources allocated across [Energy Source 1, Energy Source 2]
+                Src1-->>Src2: Tentatively Allocate Resources
+                Src1-->>Src1: bankers_is_safe() ➔ TRUE
+                Src1-->>Src2: GRANT Request (System remains safe)
+                Note over Src1, Src2: Resources allocated across [Source 1, Source 2]
             else Allocation Would Break Safety
-                S1-->>S2: Rollback Tentative Allocation
-                S1-->>S1: bankers_is_safe() ➔ FALSE
-                S1-->>S2: DENY Request (Deadlock prevented)
-                Note over S1, S2: [STATE: BLOCKED] (Resource wait if needed)
+                Src1-->>Src2: Rollback Tentative Allocation
+                Src1-->>Src1: bankers_is_safe() ➔ FALSE
+                Src1-->>Src2: DENY Request (Deadlock prevented)
+                Note over Src1, Src2: [STATE: BLOCKED] (Resource wait if needed)
             end
         end
-
-        S1->>Core1: pthread_mutex_unlock(&energy_mutex)
+        
+        Src1->>Core1: pthread_mutex_unlock(&energy_mutex)
         Core1->>Core1: Mode = USER_MODE
     end
 
@@ -354,9 +354,9 @@ git checkout -b feature/your-task-name
         Core1->>Core1: sleep(burst_time) - Execute User Code
         Note over Core1: [STATE: RUNNING] ➔ [STATE: TERMINATED]
     end
-
+    
     %% ECO-CLOUD EXTENSION CALLOUT
-    Note over Prod, S1, S2: ECO-CLOUD RESEARCH EXTENSION:<br/>Jobs delayed due to energy conditions will be moved to<br/>[STATE: READY_SUSPEND] or [STATE: BLOCKED_SUSPEND]
+    Note over Prod: ECO-CLOUD RESEARCH EXTENSION:<br/>Jobs delayed due to energy conditions will be moved to<br/>[STATE: READY_SUSPEND] or [STATE: BLOCKED_SUSPEND]
 
 ```
 
