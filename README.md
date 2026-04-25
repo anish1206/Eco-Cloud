@@ -81,7 +81,13 @@ graph TD
 - **Priority Scheduling (Green-first)**  
 - **Aging and Starvation Prevention**
 
-**Round Robin quantum selection in `os_engine`:** the quantum is computed at runtime from the actual burst-time set for the current run. The code takes the burst-time distribution, uses the median burst length as the base slice, and then clamps it to stay comfortably above context-switch overhead. That keeps the scheduler workload-driven rather than arbitrary.
+**Round Robin quantum selection in `os_engine`:** the quantum is computed at runtime from the actual burst-time set for the current run using the 80th percentile rule:
+
+$$
+Q = P_{80}(burst\_times)
+$$
+
+This keeps the scheduler workload-driven rather than arbitrary. Context-switch overhead is still simulated as runtime cost, but it is not used in the quantum formula.
 
 In this simulator, the job burst times are generated for the run itself, so the quantum can change from run to run depending on the observed workload.
 
@@ -277,7 +283,7 @@ git checkout -b feature/your-task-name
     Main->>Core1: pthread_create()
     Main->>Core2: pthread_create()
     
-    rect rgb(230, 245, 255)
+    rect rgb(28, 38, 52)
         Note over Prod: Concept: Process Creation
         Prod->>Prod: Create PCB (PID, Burst, Mode: USER)
         Note over Prod: [STATE: NEW]
@@ -317,21 +323,21 @@ git checkout -b feature/your-task-name
     end
 
     %% EXECUTION & CONTEXT SWITCHING
-    rect rgb(245, 255, 245)
+    rect rgb(30, 46, 40)
         Note over Core1: Concept: Context Switching
         Core1->>Core1: usleep(500000) - Load Hardware Registers
         Note over Core1: [STATE: READY] ➔ [STATE: RUNNING]
     end
 
     %% SYSTEM CALLS & HARDWARE ACCESS
-    rect rgb(255, 245, 245)
+    rect rgb(52, 34, 34)
         Note over Core1, Src1: Concept: Privilege Escalation & System Calls
         Core1->>Core1: trigger sim_request_resource()
         Core1->>Core1: Mode = KERNEL_MODE
         
         Core1->>Src1: pthread_mutex_lock(&energy_mutex)
         
-        rect rgb(255, 240, 245)
+        rect rgb(56, 34, 48)
             Note over Src1, Src2: Concept: Banker's Algorithm (Deadlock Avoidance)
             Src1->>Src1: bankers_request_resources()
             
@@ -352,10 +358,25 @@ git checkout -b feature/your-task-name
         Core1->>Core1: Mode = USER_MODE
     end
 
+    %% ROUND ROBIN TIME-SLICE DECISION
+    rect rgb(27, 43, 61)
+        Note over Core1, Q: Concept: Round Robin (Adaptive Quantum)
+        Core1->>Core1: slice = min(remaining_time, rr_time_quantum)
+        Core1->>Core1: sleep(slice) - Execute Time Slice
+
+        alt remaining_time > 0 after slice
+            Note over Core1: [STATE: RUNNING] ➔ [STATE: READY] (Preempt)
+            Core1->>Q: Requeue PCB at rear
+            Core1->>Core1: Continue with next ready job
+        else remaining_time == 0
+            Note over Core1: Job completed in current slice
+        end
+    end
+
     %% TERMINATION
-    rect rgb(240, 240, 240)
+    rect rgb(58, 58, 58)
         Note over Core1: Concept: CPU Execution & Termination
-        Core1->>Core1: sleep(burst_time) - Execute User Code
+        Core1->>Core1: Release resources and finalize job
         Note over Core1: [STATE: RUNNING] ➔ [STATE: TERMINATED]
     end
     
