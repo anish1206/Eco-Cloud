@@ -77,9 +77,13 @@ graph TD
 #### Scheduling Algorithms
 
 - **FCFS**  
-- **Round Robin (Time Quantum)**  
+- **Round Robin (Adaptive Quantum)**  
 - **Priority Scheduling (Green-first)**  
 - **Aging and Starvation Prevention**
+
+**Round Robin quantum selection in `os_engine`:** the quantum is computed at runtime from the actual burst-time set for the current run. The code takes the burst-time distribution, uses the median burst length as the base slice, and then clamps it to stay comfortably above context-switch overhead. That keeps the scheduler workload-driven rather than arbitrary.
+
+In this simulator, the job burst times are generated for the run itself, so the quantum can change from run to run depending on the observed workload.
 
 #### Scheduling Metrics
 

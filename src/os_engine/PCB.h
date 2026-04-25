@@ -23,6 +23,7 @@ typedef enum {
 typedef struct {
     char job_id[16];
     int burst_time;
+    int remaining_time;
     int memory_req;
     
     ProcessState state;
