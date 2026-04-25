@@ -260,20 +260,20 @@ git checkout -b feature/your-task-name
 ---
 
 ```mermaid
-%%{init: {'theme': 'dark'}}%%
     sequenceDiagram
     participant Main as Main Thread (OS Boot)
     participant Prod as Producer (Job Generator)
     participant Q as Ready Queue (Shared Memory)
     participant Core1 as CPU Core 1 (Consumer)
     participant Core2 as CPU Core 2 (Consumer)
-    participant Grid as Global Energy Grid
+    participant S1 as Energy Source 1
+    participant S2 as Energy Source 2
 
     Main->>Prod: pthread_create()
     Main->>Core1: pthread_create()
     Main->>Core2: pthread_create()
-   
-    rect rgb(40, 60, 90)
+
+    rect rgb(230, 245, 255)
         Note over Prod: Concept: Process Creation
         Prod->>Prod: Create PCB (PID, Burst, Mode: USER)
         Note over Prod: [STATE: NEW]
@@ -286,17 +286,17 @@ git checkout -b feature/your-task-name
     else Queue has Space
         Prod->>Q: sem_wait(&empty_slots) -> PROCEED
         Prod->>Q: pthread_mutex_lock(&queue_mutex)
-       
+
         Q-->>Q: Insert PCB into Ready Queue
         Note over Q: [STATE: NEW] ➔ [STATE: READY]
-       
+
         Q->>Prod: pthread_mutex_unlock(&queue_mutex)
         Prod->>Core1: sem_post(&full_slots) -> WAKES IDLE CPU
     end
 
     %% CONSUMER LOGIC (SHOWING BOTH CORES)
     Note over Core1, Core2: Concept: Multi-Core Synchronization
-   
+
     %% CORE 2 SCENARIO (EMPTY QUEUE)
     alt Queue is Empty (full_slots == 0)
         Core2-->>Core2: sem_wait(&full_slots) -> CORE 2 GOES TO SLEEP
@@ -306,57 +306,57 @@ git checkout -b feature/your-task-name
     alt Queue has Jobs (full_slots > 0)
         Core1->>Q: sem_wait(&full_slots) -> PROCEED
         Core1->>Q: pthread_mutex_lock(&queue_mutex)
-       
+
         Q-->>Core1: Extract PCB from Ready Queue
         Core1->>Q: pthread_mutex_unlock(&queue_mutex)
         Core1->>Prod: sem_post(&empty_slots) -> WAKES PRODUCER
     end
 
     %% EXECUTION & CONTEXT SWITCHING
-    rect rgb(30, 70, 50)
+    rect rgb(245, 255, 245)
         Note over Core1: Concept: Context Switching
         Core1->>Core1: usleep(500000) - Load Hardware Registers
         Note over Core1: [STATE: READY] ➔ [STATE: RUNNING]
     end
 
     %% SYSTEM CALLS & HARDWARE ACCESS
-    rect rgb(80, 40, 50)
-        Note over Core1, Grid: Concept: Privilege Escalation & System Calls
+    rect rgb(255, 245, 245)
+        Note over Core1, S1: Concept: Privilege Escalation & System Calls
         Core1->>Core1: trigger sim_request_resource()
         Core1->>Core1: Mode = KERNEL_MODE
-       
-        Core1->>Grid: pthread_mutex_lock(&energy_mutex)
-       
-        rect rgb(90, 50, 70)
-            Note over Grid: Concept: Banker's Algorithm (Deadlock Avoidance)
-            Grid->>Grid: bankers_request_resources()
-           
+
+        Core1->>S1: pthread_mutex_lock(&energy_mutex)
+
+        rect rgb(255, 240, 245)
+            Note over S1, S2: Concept: Banker's Algorithm (Deadlock Avoidance)
+            S1->>S1: bankers_request_resources()
+
             alt Allocation Does NOT Lead to Unsafe State
-                Grid-->>Grid: Tentatively Allocate Resources
-                Grid-->>Grid: bankers_is_safe() ➔ TRUE
-                Grid-->>Grid: GRANT Request (System remains safe)
-                Note over Grid: Resources allocated across [Solar, Grid, Battery]
+                S1-->>S2: Tentatively Allocate Resources
+                S1-->>S1: bankers_is_safe() ➔ TRUE
+                S1-->>S2: GRANT Request (System remains safe)
+                Note over S1, S2: Resources allocated across [Energy Source 1, Energy Source 2]
             else Allocation Would Break Safety
-                Grid-->>Grid: Rollback Tentative Allocation
-                Grid-->>Grid: bankers_is_safe() ➔ FALSE
-                Grid-->>Grid: DENY Request (Deadlock prevented)
-                Note over Grid: [STATE: BLOCKED] (Resource wait if needed)
+                S1-->>S2: Rollback Tentative Allocation
+                S1-->>S1: bankers_is_safe() ➔ FALSE
+                S1-->>S2: DENY Request (Deadlock prevented)
+                Note over S1, S2: [STATE: BLOCKED] (Resource wait if needed)
             end
         end
-       
-        Grid->>Core1: pthread_mutex_unlock(&energy_mutex)
+
+        S1->>Core1: pthread_mutex_unlock(&energy_mutex)
         Core1->>Core1: Mode = USER_MODE
     end
 
     %% TERMINATION
-    rect rgb(60, 60, 70)
+    rect rgb(240, 240, 240)
         Note over Core1: Concept: CPU Execution & Termination
         Core1->>Core1: sleep(burst_time) - Execute User Code
         Note over Core1: [STATE: RUNNING] ➔ [STATE: TERMINATED]
     end
-   
+
     %% ECO-CLOUD EXTENSION CALLOUT
-    Note over Prod, Grid: ECO-CLOUD RESEARCH EXTENSION:<br/>Jobs delayed due to high Grid Carbon Intensity will be moved to<br/>[STATE: READY_SUSPEND] or [STATE: BLOCKED_SUSPEND]
+    Note over Prod, S1, S2: ECO-CLOUD RESEARCH EXTENSION:<br/>Jobs delayed due to energy conditions will be moved to<br/>[STATE: READY_SUSPEND] or [STATE: BLOCKED_SUSPEND]
 
 ```
 
