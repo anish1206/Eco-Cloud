@@ -116,8 +116,12 @@ bool bankers_safety_check(BankersAlgorithmState* state, int* safe_sequence,
 
 // Check if the system is in a SAFE state
 bool bankers_is_safe(BankersAlgorithmState* state, int* safe_sequence) {
+    // IMPORTANT: The safety-check simulation mutates `available` as it explores
+    // completion sequences. Never run it against the live state, otherwise the
+    // real `available` values can be permanently inflated.
+    BankersAlgorithmState snapshot = *state;
     bool visited[MAX_PROCESSES] = {false};
-    return bankers_safety_check(state, safe_sequence, visited, 0);
+    return bankers_safety_check(&snapshot, safe_sequence, visited, 0);
 }
 
 // Request resources (returns true if safe to allocate)
