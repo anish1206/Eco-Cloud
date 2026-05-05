@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eco-Cloud OS Engine Frontend</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top-nav">
+    <div class="nav-brand">
+      <span class="brand-mark">ECO</span>
+      <span class="brand-sub">OS Engine Console</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#concepts">Concepts</a>
+      <a href="#run">Live Run</a>
+      <a href="#banker">Banker State</a>
+    </nav>
+    <button class="btn-primary" data-scroll="run">View Timeline</button>
+  </header>
+
+  <main>
+    <section class="hero" id="overview">
+      <div class="hero-content">
+        <p class="eyebrow">Eco-Cloud OS Kernel</p>
+        <h1>Explain core OS concepts with a live, readable run.</h1>
+        <p class="hero-subtitle">
+          This frontend turns the kernel output into a guided walk-through: admission control,
+          context switching, Round Robin scheduling, and Banker's Algorithm safety checks.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" data-scroll="run">Explore the Run</button>
+          <button class="btn-secondary" data-scroll="concepts">View OS Concepts</button>
+        </div>
+        <div class="hero-stats" id="summary-cards"></div>
+      </div>
+      <div class="hero-panel">
+        <div class="panel-card">
+          <h3>Run Configuration</h3>
+          <div class="panel-grid" id="run-config"></div>
+        </div>
+        <div class="panel-card">
+          <h3>Process States Used</h3>
+          <div class="state-chips" id="state-chips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="concepts">
+      <div class="section-header">
+        <h2>OS Concepts Mapped to the Engine</h2>
+        <p>Each card is tied to the implementation you have in the kernel output.</p>
+      </div>
+      <div class="card-grid">
+        <article class="concept-card">
+          <h3>Process Control Block</h3>
+          <p>Tracks job id, burst time, state, and privilege mode so each job can move through the 7-state model.</p>
+          <div class="pill-row">
+            <span>NEW</span><span>READY</span><span>RUNNING</span><span>TERMINATED</span>
+          </div>
+          <div class="concept-visual pcb-visual" aria-hidden="true">
+            <div class="state-track">
+              <span>NEW</span>
+              <span>READY</span>
+              <span>RUN</span>
+              <span>TERM</span>
+              <div class="state-dot"></div>
+            </div>
+          </div>
+          <div class="concept-detail" id="pcb-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Round Robin Scheduler</h3>
+          <p>Time quantum is adaptive and chosen from the 80th percentile of the current burst times.</p>
+          <div class="metric" id="rr-quantum">Quantum: -- sec</div>
+          <div class="concept-visual rr-visual" aria-hidden="true">
+            <div class="rr-ring">
+              <div class="rr-token"></div>
+            </div>
+            <div class="rr-queue">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="concept-detail" id="rr-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Time Quantum Calculation</h3>
+          <p>The scheduler derives the quantum from the workload rather than a fixed constant.</p>
+          <div class="concept-visual quantum-visual" aria-hidden="true">
+            <div class="quantum-bar">
+              <div class="quantum-marker"></div>
+            </div>
+            <div class="quantum-labels">
+              <span>P50</span><span>P80</span><span>P100</span>
+            </div>
+          </div>
+          <div class="concept-detail" id="quantum-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Context Switching</h3>
+          <p>Each dispatch pays a real context switch overhead before the process runs.</p>
+          <div class="concept-visual context-visual" aria-hidden="true">
+            <div class="context-core">Core</div>
+            <div class="context-arrow"></div>
+            <div class="context-reg">Regs</div>
+          </div>
+          <div class="concept-detail" id="context-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Deadlock Avoidance</h3>
+          <p>Banker's Algorithm checks every energy request and only grants it if the system stays safe.</p>
+          <div class="metric" id="banker-available">Available: --</div>
+          <div class="concept-visual banker-visual" aria-hidden="true">
+            <div class="banker-grid">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+            <div class="banker-scan"></div>
+          </div>
+          <div class="concept-detail" id="banker-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>System Calls & Modes</h3>
+          <p>User jobs switch to kernel mode to request shared energy resources.</p>
+          <div class="concept-visual syscall-visual" aria-hidden="true">
+            <div class="syscall-pill user">USER</div>
+            <div class="syscall-pill kernel">KERNEL</div>
+          </div>
+          <div class="concept-detail" id="syscall-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Semaphores & Mutexes</h3>
+          <p>Concurrency primitives protect the ready queue and shared energy budget.</p>
+          <div class="concept-visual sync-visual" aria-hidden="true">
+            <div class="lock">Q</div>
+            <div class="lock">E</div>
+            <div class="lock">P</div>
+          </div>
+          <div class="concept-detail" id="sync-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Producer-Consumer Queue</h3>
+          <p>The job generator fills the ready queue while CPU cores consume from it.</p>
+          <div class="concept-visual queue-visual" aria-hidden="true">
+            <div class="queue-producer">Producer</div>
+            <div class="queue-buffer">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="queue-consumer">Consumer</div>
+          </div>
+          <div class="concept-detail" id="queue-details"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="run">
+      <div class="section-header">
+        <h2>Live Run Timeline</h2>
+        <p>Use the filter or stepper to walk through the actual output from a kernel run.</p>
+      </div>
+      <div class="core-sim">
+        <div class="core-column">
+          <h4>Ready Queue</h4>
+          <div class="slot" id="queue-lane"></div>
+        </div>
+        <div class="core-column">
+          <h4>Core 1</h4>
+          <div class="slot" id="core-1"></div>
+        </div>
+        <div class="core-column">
+          <h4>Core 2</h4>
+          <div class="slot" id="core-2"></div>
+        </div>
+        <div class="core-column">
+          <h4>Completed</h4>
+          <div class="slot" id="done-lane"></div>
+        </div>
+      </div>
+      <div class="run-insights">
+        <div class="panel-card">
+          <h3>Core Activity</h3>
+          <div class="core-stats" id="core-stats"></div>
+        </div>
+        <div class="panel-card">
+          <h3>Safe State Check</h3>
+          <div class="safe-indicator" id="safe-indicator"></div>
+          <div class="safe-detail" id="safe-detail"></div>
+          <div class="matrix-table" id="matrix-grid"></div>
+        </div>
+        <div class="panel-card">
+          <h3>Selected Job PCB</h3>
+          <div class="pcb-grid" id="pcb-grid"></div>
+          <div class="lifecycle" id="lifecycle-steps"></div>
+        </div>
+      </div>
+      <div class="run-layout">
+        <div class="run-controls">
+          <div class="filter-row" id="event-filters"></div>
+          <div class="stepper">
+            <button class="btn-secondary" id="step-prev">Previous</button>
+            <button class="btn-primary" id="step-next">Next Event</button>
+            <button class="btn-tertiary" id="step-reset">Reset</button>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="unsafe-toggle" />
+            <span>Simulate unsafe allocation</span>
+          </label>
+          <div class="event-detail" id="event-detail">
+            <p>Select an event to see the explanation.</p>
+          </div>
+        </div>
+        <div class="run-events" id="event-list"></div>
+      </div>
+    </section>
+
+    <section class="section" id="banker">
+      <div class="section-header">
+        <h2>Banker State Snapshot</h2>
+        <p>The final safe state from the same run. This mirrors the kernel printout.</p>
+      </div>
+      <div class="banker-layout">
+        <div class="panel-card light">
+          <h3>Available Resources</h3>
+          <div class="resource-grid" id="available-grid"></div>
+          <div class="resource-note">Requests are split across Solar, Grid, and Battery.</div>
+        </div>
+        <div class="panel-card">
+          <h3>Allocation Table</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Allocated</th>
+                  <th>Need</th>
+                </tr>
+              </thead>
+              <tbody id="banker-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-light">
+    <div class="footer-grid">
+      <div>
+        <h4>Eco-Cloud OS</h4>
+        <p>Kernel concepts explained through a single, real run output.</p>
+      </div>
+      <div>
+        <h5>Concepts</h5>
+        <p>Process States</p>
+        <p>Scheduling</p>
+        <p>Deadlock Avoidance</p>
+      </div>
+      <div>
+        <h5>Navigation</h5>
+        <p>Overview</p>
+        <p>Live Run</p>
+        <p>Banker State</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
