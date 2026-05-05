@@ -44,6 +44,7 @@
         <div class="panel-card">
           <h3>Process States Used</h3>
           <div class="state-chips" id="state-chips"></div>
+          <img class="state-diagram" src="public/image.png" alt="Process state transitions" />
         </div>
       </div>
     </section>
@@ -59,15 +60,6 @@
           <p>Tracks job id, burst time, state, and privilege mode so each job can move through the 7-state model.</p>
           <div class="pill-row">
             <span>NEW</span><span>READY</span><span>RUNNING</span><span>TERMINATED</span>
-          </div>
-          <div class="concept-visual pcb-visual" aria-hidden="true">
-            <div class="state-track">
-              <span>NEW</span>
-              <span>READY</span>
-              <span>RUN</span>
-              <span>TERM</span>
-              <div class="state-dot"></div>
-            </div>
           </div>
           <div class="concept-detail" id="pcb-details"></div>
         </article>
@@ -88,38 +80,25 @@
         <article class="concept-card">
           <h3>Time Quantum Calculation</h3>
           <p>The scheduler derives the quantum from the workload rather than a fixed constant.</p>
-          <div class="concept-visual quantum-visual" aria-hidden="true">
-            <div class="quantum-bar">
-              <div class="quantum-marker"></div>
+          <p class="quantum-formula">Q = P80(burst_times) | i = ceil((x / 100) * N) - 1 (0-based)</p>
+          <div class="quantum-tool" id="quantum-tool">
+            <div class="quantum-table" id="quantum-table"></div>
+            <div class="quantum-actions">
+              <button class="btn-secondary" id="quantum-recalc">Recalculate</button>
             </div>
-            <div class="quantum-labels">
-              <span>P50</span><span>P80</span><span>P100</span>
-            </div>
+            <div class="quantum-result" id="quantum-result"></div>
           </div>
           <div class="concept-detail" id="quantum-details"></div>
         </article>
         <article class="concept-card">
           <h3>Context Switching</h3>
           <p>Each dispatch pays a real context switch overhead before the process runs.</p>
-          <div class="concept-visual context-visual" aria-hidden="true">
-            <div class="context-core">Core</div>
-            <div class="context-arrow"></div>
-            <div class="context-reg">Regs</div>
-          </div>
           <div class="concept-detail" id="context-details"></div>
         </article>
         <article class="concept-card">
           <h3>Deadlock Avoidance</h3>
           <p>Banker's Algorithm checks every energy request and only grants it if the system stays safe.</p>
           <div class="metric" id="banker-available">Available: --</div>
-          <div class="concept-visual banker-visual" aria-hidden="true">
-            <div class="banker-grid">
-              <span></span><span></span><span></span>
-              <span></span><span></span><span></span>
-              <span></span><span></span><span></span>
-            </div>
-            <div class="banker-scan"></div>
-          </div>
           <div class="concept-detail" id="banker-details"></div>
         </article>
         <article class="concept-card">

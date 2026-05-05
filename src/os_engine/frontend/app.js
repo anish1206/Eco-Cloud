@@ -708,6 +708,80 @@ function renderConceptDetails() {
   ]);
 }
 
+function computeP80(values) {
+  if (!values.length) {
+    return { quantum: 0, ordered: [] };
+  }
+  const ordered = [...values].sort((a, b) => a - b);
+  const index = Math.max(Math.ceil(0.8 * ordered.length) - 1, 0);
+  return { quantum: ordered[index], ordered };
+}
+
+function renderQuantumTool() {
+  const table = document.getElementById("quantum-table");
+  const result = document.getElementById("quantum-result");
+  if (!table || !result) {
+    return;
+  }
+
+  const jobList = Array.from(jobs.values())
+    .filter((job) => typeof job.burstTime === "number")
+    .map((job) => ({ id: job.jobId, burst: job.burstTime }));
+
+  const baseValues = jobList.length
+    ? jobList
+    : [
+        { id: "JOB_A", burst: 2 },
+        { id: "JOB_B", burst: 3 },
+        { id: "JOB_C", burst: 1 }
+      ];
+
+  table.innerHTML = [
+    `<div class="quantum-head">Job</div>`,
+    `<div class="quantum-head">Burst</div>`,
+    ...baseValues.flatMap(
+      (job, index) => [
+        `<div class="quantum-row">${job.id}</div>`,
+        `<input class="quantum-input" type="number" min="1" value="${job.burst}" data-idx="${index}" />`
+      ]
+    )
+  ].join("");
+
+  const recalc = () => {
+    const inputs = Array.from(table.querySelectorAll(".quantum-input"));
+    const bursts = inputs.map((input) => Number(input.value || 0)).filter((value) => value > 0);
+    const { quantum, ordered } = computeP80(bursts);
+    const formula = `Q = P80(burst_times)`;
+    result.innerHTML = `
+      <div>${formula}</div>
+      <div>Sorted: [${ordered.join(", ")}]</div>
+      <div>Selected quantum: <strong>${quantum || "--"} sec</strong></div>
+    `;
+
+    const quantumDetail = document.getElementById("quantum-details");
+    if (quantumDetail) {
+      quantumDetail.innerHTML = `
+        <div class="detail-row"><span>Rule</span><span>P80(burst_times)</span></div>
+        <div class="detail-row"><span>Selected</span><span>${quantum || "--"} sec</span></div>
+        <div class="detail-row"><span>Jobs</span><span>${bursts.length}</span></div>
+      `;
+    }
+  };
+
+  table.addEventListener("input", (event) => {
+    if (event.target.classList.contains("quantum-input")) {
+      recalc();
+    }
+  });
+
+  const recalcButton = document.getElementById("quantum-recalc");
+  if (recalcButton) {
+    recalcButton.onclick = recalc;
+  }
+
+  recalc();
+}
+
 function renderFilters() {
   const filterRow = document.getElementById("event-filters");
   filterRow.innerHTML = eventTypes
@@ -1051,7 +1125,7 @@ function renderEvents() {
       (item, index) => `
       <div class="event-item ${index === currentIndex ? "active" : ""}" data-index="${index}" data-global="${item.index}">
         <div class="event-tag">${item.event.type}</div>
-        <div>
+        <div class="event-main">
           <div class="event-title">${item.event.title}</div>
           <div class="event-desc">${item.event.description}</div>
         </div>
@@ -1209,6 +1283,7 @@ function init() {
   renderStates();
   renderMetrics();
   renderConceptDetails();
+  renderQuantumTool();
   renderFilters();
   renderEvents();
   renderBankerState();

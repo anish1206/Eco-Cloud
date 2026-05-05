@@ -237,6 +237,14 @@ a {
   color: var(--on-dark);
 }
 
+.state-diagram {
+  margin-top: var(--space-md);
+  width: 100%;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-on-dark);
+  background: var(--surface-card-dark);
+}
+
 .section {
   padding: var(--space-section) var(--space-xl);
 }
@@ -303,6 +311,68 @@ a {
   min-height: 72px;
   position: relative;
   overflow: hidden;
+}
+
+.quantum-tool {
+  margin-top: var(--space-md);
+  padding: var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated-dark);
+  border: 1px solid var(--hairline-on-dark);
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: 1fr;
+}
+
+.quantum-table {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  gap: 6px 10px;
+  font-size: 12px;
+  color: var(--muted-strong);
+  max-height: 180px;
+  overflow: auto;
+}
+
+.quantum-table .quantum-head {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.quantum-row {
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-card-dark);
+  color: var(--on-dark);
+}
+
+.quantum-input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--hairline-on-dark);
+  border-radius: var(--radius-sm);
+  color: var(--on-dark);
+  padding: 4px 6px;
+  font-family: var(--font-number);
+  font-size: 12px;
+}
+
+.quantum-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.quantum-result {
+  font-size: 12px;
+  color: var(--muted-strong);
+  line-height: 1.4;
+}
+
+.quantum-formula {
+  font-size: 12px;
+  color: var(--muted-strong);
 }
 
 .state-track {
@@ -886,9 +956,9 @@ a {
   padding: var(--space-sm) 0;
   border-bottom: 1px solid var(--hairline-on-dark);
   display: grid;
-  grid-template-columns: 90px 1fr;
+  grid-template-columns: 90px 1fr 1.2fr;
   gap: var(--space-sm);
-  align-items: baseline;
+  align-items: center;
 }
 
 .event-item:last-child {
@@ -913,6 +983,14 @@ a {
 .event-item .event-desc {
   color: var(--muted-strong);
   font-size: 13px;
+  text-align: right;
+}
+
+.event-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .banker-layout {
@@ -1116,5 +1194,15 @@ td {
 
   .section {
     padding: 56px var(--space-lg);
+  }
+
+  .quantum-tool {
+    grid-template-columns: 1fr;
+  }
+
+  .quantum-actions,
+  .quantum-result,
+  .quantum-table {
+    grid-column: 1 / -1;
   }
 }
