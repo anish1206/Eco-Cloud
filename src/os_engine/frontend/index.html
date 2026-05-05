@@ -17,6 +17,7 @@
       <a href="#concepts">Concepts</a>
       <a href="#run">Live Run</a>
       <a href="#banker">Banker State</a>
+      <a href="#memory">Memory</a>
     </nav>
     <button class="btn-primary" data-scroll="run">View Timeline</button>
   </header>
@@ -26,21 +27,16 @@
       <div class="hero-content">
         <p class="eyebrow">Eco-Cloud OS Kernel</p>
         <h1>Explain core OS concepts with a live, readable run.</h1>
-        <p class="hero-subtitle">
+        <!-- <p class="hero-subtitle">
           This frontend turns the kernel output into a guided walk-through: admission control,
           context switching, Round Robin scheduling, and Banker's Algorithm safety checks.
-        </p>
+        </p> -->
         <div class="hero-actions">
           <button class="btn-primary" data-scroll="run">Explore the Run</button>
           <button class="btn-secondary" data-scroll="concepts">View OS Concepts</button>
         </div>
-        <div class="hero-stats" id="summary-cards"></div>
       </div>
       <div class="hero-panel">
-        <div class="panel-card">
-          <h3>Run Configuration</h3>
-          <div class="panel-grid" id="run-config"></div>
-        </div>
         <div class="panel-card">
           <h3>Process States Used</h3>
           <div class="state-chips" id="state-chips"></div>
@@ -223,6 +219,77 @@
         </div>
       </div>
     </section>
+
+    <section class="section" id="memory">
+      <div class="section-header">
+        <h2>Memory Management</h2>
+        <p>Interactive simulators for partition allocation, fragmentation, and paging.</p>
+      </div>
+
+      <div class="memory-panels">
+
+        <!-- Panel 1: Variable Partition Allocator -->
+        <div class="panel-card mem-panel">
+          <div class="mem-panel-header">
+            <h3>Variable Partition Allocation</h3>
+            <div class="mem-strategy-toggle">
+              <button class="mem-strategy-btn active" id="btn-first-fit">First Fit</button>
+              <button class="mem-strategy-btn" id="btn-best-fit">Best Fit</button>
+            </div>
+          </div>
+          <p class="mem-desc">Jobs are loaded into the first (or best) fitting free partition. <strong>Internal fragmentation</strong> is the wasted space inside an oversized partition.</p>
+          <div class="mem-strip-label">
+            <span>RAM — 200 KB (5 Partitions)</span>
+            <span id="part-stats">Free: 200 KB | Used: 0 KB | Wasted: 0 KB</span>
+          </div>
+          <div class="mem-strip" id="partition-strip"></div>
+          <div class="mem-legend">
+            <span class="mem-legend-item"><span class="mem-dot allocated"></span>Allocated</span>
+            <span class="mem-legend-item"><span class="mem-dot waste"></span>Internal Fragment</span>
+            <span class="mem-legend-item"><span class="mem-dot free"></span>Free</span>
+          </div>
+          <div class="mem-controls">
+            <div class="mem-job-queue" id="part-job-queue"></div>
+            <div class="mem-btns">
+              <button class="btn-primary" id="part-allocate">Allocate Next Job</button>
+              <button class="btn-secondary" id="part-deallocate">Deallocate Last</button>
+              <button class="btn-tertiary" id="part-reset">Reset</button>
+            </div>
+          </div>
+          <div class="mem-info-box" id="part-info"></div>
+        </div>
+
+        <!-- Panel 2: External Fragmentation -->
+        <div class="panel-card mem-panel">
+          <h3>External Fragmentation</h3>
+          <p class="mem-desc">Total free memory may be <em>sufficient</em>, but scattered across non-contiguous holes &mdash; making a large contiguous request impossible without <strong>compaction</strong>.</p>
+          <div class="mem-strip-label">
+            <span>RAM &mdash; 230 KB</span>
+            <span id="ext-stats">Total Free: 85 KB | Largest Hole: 35 KB</span>
+          </div>
+          <div class="mem-strip" id="ext-strip"></div>
+          <div class="mem-legend">
+            <span class="mem-legend-item"><span class="mem-dot allocated"></span>Allocated</span>
+            <span class="mem-legend-item"><span class="mem-dot free"></span>Free (Hole)</span>
+            <span class="mem-legend-item"><span class="mem-dot request-fail"></span>Request Blocked</span>
+          </div>
+          <div class="ext-request-area">
+            <div class="ext-request-info">
+              <span>Requesting: <strong>60 KB</strong> contiguous block</span>
+              <span class="ext-verdict" id="ext-verdict"></span>
+            </div>
+            <div class="mem-btns">
+              <button class="btn-primary" id="ext-request">Request 60 KB</button>
+              <button class="btn-secondary" id="ext-compact">Compact Memory</button>
+              <button class="btn-tertiary" id="ext-reset">Reset</button>
+            </div>
+          </div>
+          <div class="mem-info-box" id="ext-info"></div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <footer class="footer-light">

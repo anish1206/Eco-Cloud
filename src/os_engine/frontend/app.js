@@ -569,6 +569,7 @@ lines.forEach((line) => {
 
 function renderSummary() {
   const container = document.getElementById("summary-cards");
+  if (!container) return;
   const items = [
     { label: "Quantum", value: summary.quantum ? `${summary.quantum} sec` : "--" },
     { label: "Jobs", value: summary.totalJobs ?? "--" },
@@ -591,6 +592,7 @@ function renderSummary() {
 
 function renderConfig() {
   const config = document.getElementById("run-config");
+  if (!config) return;
   const items = [
     { label: "Available Solar", value: summary.available ? `${summary.available[0]}W` : "--" },
     { label: "Available Grid", value: summary.available ? `${summary.available[1]}W` : "--" },
@@ -990,9 +992,9 @@ function buildJobSnapshot(untilIndex, jobId) {
     state: "NEW",
     mode: "USER",
     burstTime: base.burstTime,
-    remainingBefore: base.remainingBefore,
-    remaining: base.remaining,
-    lastSlice: base.lastSlice,
+    remainingBefore: null,
+    remaining: base.burstTime,
+    lastSlice: null,
     requestWatts: null,
     energyGranted: null,
     allocation: null,
@@ -1092,7 +1094,6 @@ function renderJobInspector() {
 
   grid.innerHTML = [
     `<div class="pcb-row"><span>Job ID</span><span class="pcb-value">${job.jobId}</span></div>`,
-    `<div class="pcb-row"><span>Process ID</span><span class="pcb-value">${job.processId ?? "--"}</span></div>`,
     `<div class="pcb-row"><span>Core</span><span class="pcb-value">${job.coreId ?? "--"}</span></div>`,
     `<div class="pcb-row"><span>State</span><span class="pcb-value">${job.state ?? "--"}</span></div>`,
     `<div class="pcb-row"><span>Mode</span>${modeSwitch}</div>`,
@@ -1294,6 +1295,198 @@ function init() {
   bindJobSelection();
   bindUnsafeToggle();
   bindScrollButtons();
+  initPartitionSimulator();
+  initExternalFragDemo();
 }
 
+// ============================================================
+// MEMORY MANAGEMENT SIMULATORS
+// ============================================================
+
+function initPartitionSimulator() {
+  const TOTAL = 200;
+  const PARTITIONS = [40, 30, 60, 20, 50];
+  const JOBS = [
+    { name: 'JOB_A', size: 20, color: '#fcd535' },
+    { name: 'JOB_B', size: 35, color: '#0ecb81' },
+    { name: 'JOB_C', size: 15, color: '#3b82f6' },
+    { name: 'JOB_D', size: 50, color: '#fb923c' },
+    { name: 'JOB_E', size: 25, color: '#a78bfa' }
+  ];
+  let strategy = 'first-fit';
+  let partitions = PARTITIONS.map((s) => ({ size: s, job: null }));
+  let jobQueue = [...JOBS];
+  let allocated = [];
+
+  function findPartition(job) {
+    if (strategy === 'first-fit') {
+      return partitions.findIndex((p) => !p.job && p.size >= job.size);
+    }
+    let best = -1, bestWaste = Infinity;
+    partitions.forEach((p, i) => {
+      if (!p.job && p.size >= job.size) {
+        const w = p.size - job.size;
+        if (w < bestWaste) { bestWaste = w; best = i; }
+      }
+    });
+    return best;
+  }
+
+  function render() {
+    const strip = document.getElementById('partition-strip');
+    const stats = document.getElementById('part-stats');
+    const info  = document.getElementById('part-info');
+    const queue = document.getElementById('part-job-queue');
+    if (!strip) return;
+    let usedKB = 0, wastedKB = 0;
+
+    // Each partition is a wrapper div — use flex for proportional sizing (handles gap correctly)
+    strip.innerHTML = partitions.map((p, i) => {
+      if (!p.job) {
+        return `<div class="mem-partition" style="flex:${p.size}" title="Partition ${i+1}: ${p.size}KB (Free)">
+          <div class="mem-block free" style="flex:1">
+            <span class="mem-block-label"><span class="mem-part-num">P${i+1}</span><br>${p.size}KB<br><span style="color:var(--muted)">Free</span></span>
+          </div>
+        </div>`;
+      }
+
+      usedKB += p.job.size;
+      const waste = p.size - p.job.size;
+      wastedKB += waste;
+      const col = p.job.color;
+
+      return `<div class="mem-partition" style="flex:${p.size};border-color:${col}55" title="Partition ${i+1}: ${p.size}KB — ${p.job.name}(${p.job.size}KB) + Frag(${waste}KB)">
+        <div class="mem-block allocated" style="flex:${p.job.size};background:${col}20;border-color:${col}99">
+          <span class="mem-block-label"><span class="mem-part-num" style="color:${col}">P${i+1}</span><br><span style="color:${col}">${p.job.name}</span><br>${p.job.size}KB</span>
+        </div>
+        ${waste > 0 ? `<div class="mem-block waste" style="flex:${waste}" title="Frag ${waste}KB">
+          <span class="mem-block-label frag-label">${waste}KB<br>▲</span>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+
+    const freeKB = TOTAL - usedKB - wastedKB;
+    stats.textContent = `Free: ${freeKB}KB | Used: ${usedKB}KB | Internal Frag: ${wastedKB}KB`;
+    queue.innerHTML = jobQueue.length
+      ? jobQueue.map((j) => `<div class="job-queue-chip" style="border-color:${j.color}80"><span style="color:${j.color}">${j.name}</span><span class="job-chip-size">${j.size}KB</span></div>`).join('')
+      : '<span class="mem-muted">All jobs allocated</span>';
+    info.innerHTML = wastedKB > 0
+      ? `<span class="mem-warn">⚠ ${wastedKB}KB wasted due to internal fragmentation.</span>`
+      : '';
+  }
+
+
+  document.getElementById('btn-first-fit').onclick = () => {
+    strategy = 'first-fit';
+    document.getElementById('btn-first-fit').classList.add('active');
+    document.getElementById('btn-best-fit').classList.remove('active');
+  };
+  document.getElementById('btn-best-fit').onclick = () => {
+    strategy = 'best-fit';
+    document.getElementById('btn-best-fit').classList.add('active');
+    document.getElementById('btn-first-fit').classList.remove('active');
+  };
+  document.getElementById('part-allocate').onclick = () => {
+    if (!jobQueue.length) return;
+    const job = jobQueue[0];
+    const idx = findPartition(job);
+    if (idx === -1) {
+      document.getElementById('part-info').innerHTML = `<span class="mem-warn">✗ No partition fits ${job.name} (${job.size}KB).</span>`;
+      return;
+    }
+    partitions[idx].job = job;
+    allocated.push(idx);
+    jobQueue.shift();
+    render();
+  };
+  document.getElementById('part-deallocate').onclick = () => {
+    if (!allocated.length) return;
+    const idx = allocated.pop();
+    jobQueue.unshift(partitions[idx].job);
+    partitions[idx].job = null;
+    render();
+  };
+  document.getElementById('part-reset').onclick = () => {
+    partitions = PARTITIONS.map((s) => ({ size: s, job: null }));
+    jobQueue = [...JOBS];
+    allocated = [];
+    document.getElementById('part-info').innerHTML = '';
+    render();
+  };
+  render();
+}
+
+function initExternalFragDemo() {
+  const TOTAL = 230;
+  const REQ = 60;
+  const INIT = [
+    { type: 'alloc', size: 30, label: 'P1' },
+    { type: 'free',  size: 30 },
+    { type: 'alloc', size: 50, label: 'P2' },
+    { type: 'free',  size: 20 },
+    { type: 'alloc', size: 40, label: 'P3' },
+    { type: 'free',  size: 35 },
+    { type: 'alloc', size: 25, label: 'P4' }
+  ];
+  let blocks = INIT.map((b) => ({ ...b }));
+  let state = 'idle';
+
+  function getTotalFree(bks) { return bks.filter((b) => b.type === 'free').reduce((s, b) => s + b.size, 0); }
+  function getLargestHole(bks) { return Math.max(0, ...bks.filter((b) => b.type === 'free').map((b) => b.size)); }
+
+  function render() {
+    const strip   = document.getElementById('ext-strip');
+    const statsEl = document.getElementById('ext-stats');
+    const verdict = document.getElementById('ext-verdict');
+    const info    = document.getElementById('ext-info');
+    if (!strip) return;
+
+    // Use flex proportions so gap/padding don't cause overflow or missing blocks
+    strip.innerHTML = blocks.map((b) => {
+      if (b.type === 'alloc') {
+        return `<div class="mem-block ext-alloc" style="flex:${b.size}" title="${b.label} ${b.size}KB"><span class="mem-block-label">${b.label}<br>${b.size}KB</span></div>`;
+      }
+      const cls = state === 'failed' ? 'request-fail' : (state === 'compacted' ? 'free compacted' : 'free');
+      const lbl = state === 'failed' ? `${b.size}KB<br>✗ Blocked` : `${b.size}KB<br>✓ Free`;
+      return `<div class="mem-block ${cls}" style="flex:${b.size}" title="Free ${b.size}KB"><span class="mem-block-label">${lbl}</span></div>`;
+    }).join('');
+
+    const tf = getTotalFree(blocks);
+    const lh = getLargestHole(blocks);
+    statsEl.textContent = `Total Free: ${tf}KB | Largest Hole: ${lh}KB`;
+
+    if (state === 'failed') {
+      verdict.textContent = `✗ FAILED — No hole ≥ ${REQ}KB (largest = ${lh}KB)`;
+      verdict.className = 'ext-verdict ext-fail';
+      info.innerHTML = `<span class="mem-warn">⚠ Total free ${tf}KB ≥ ${REQ}KB but memory is fragmented. Use <em>Compact Memory</em> to merge holes.</span>`;
+    } else if (state === 'compacted') {
+      verdict.textContent = `✓ Compacted — ${tf}KB contiguous free block available!`;
+      verdict.className = 'ext-verdict ext-success';
+      info.innerHTML = `<span class="mem-ok">✓ Compaction merged all ${tf}KB into one block. The ${REQ}KB request can now succeed.</span>`;
+    } else {
+      verdict.textContent = '';
+      verdict.className = 'ext-verdict';
+      info.innerHTML = '';
+    }
+  }
+
+  document.getElementById('ext-request').onclick = () => { state = 'failed'; render(); };
+  document.getElementById('ext-compact').onclick = () => {
+    const allocs = blocks.filter((b) => b.type === 'alloc');
+    const tf = getTotalFree(blocks);
+    blocks = [...allocs, { type: 'free', size: tf }];
+    state = 'compacted';
+    render();
+  };
+  document.getElementById('ext-reset').onclick = () => {
+    blocks = INIT.map((b) => ({ ...b }));
+    state = 'idle';
+    render();
+  };
+  render();
+}
+
+
+
 init();
+
