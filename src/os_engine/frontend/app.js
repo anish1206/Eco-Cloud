@@ -191,29 +191,30 @@ Available Resources (Solar, Grid, Battery): [100, 200, 50]
 
 Process Allocation States:
   Process 0:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [10, 20, 5]
+    Need:      [10, 30, 5]
   Process 1:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [5, 15, 2]
+    Need:      [15, 35, 8]
   Process 2:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [8, 10, 4]
+    Need:      [12, 40, 6]
   Process 3:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [0, 5, 1]
+    Need:      [20, 45, 9]
   Process 4:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [12, 25, 6]
+    Need:      [8, 25, 4]
   Process 5:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [4, 8, 2]
+    Need:      [16, 42, 8]
   Process 6:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [2, 10, 0]
+    Need:      [18, 40, 10]
   Process 7:
-    Allocated: [0, 0, 0]
-    Need:      [20, 50, 10]
+    Allocated: [15, 30, 8]
+    Need:      [5, 20, 2]
+Safe Sequence: [ P0, P4, P1, P2, P5, P7, P6, P3 ]
 ================================
 ==================================================`;
 
@@ -238,7 +239,7 @@ const summary = {
   contextSwitch: null
 };
 
-const stateUsage = new Set();
+const stateUsage = new Set(["BLOCKED", "SUSPEND READY", "SUSPEND BLOCKED"]);
 const events = [];
 const counters = {
   transitions: 0,
@@ -255,7 +256,8 @@ const counters = {
 };
 const bankerState = {
   available: null,
-  processes: []
+  processes: [],
+  safeSequence: []
 };
 const jobs = new Map();
 const runningJobs = { 1: null, 2: null };
@@ -399,6 +401,11 @@ lines.forEach((line) => {
           Number(needMatch[3])
         ];
       }
+    }
+
+    const safeSeqMatch = trimmed.match(/Safe Sequence:\s*\[(.*?)\]/);
+    if (safeSeqMatch) {
+      bankerState.safeSequence = safeSeqMatch[1].split(',').map(s => s.trim());
     }
   }
 
@@ -615,7 +622,12 @@ function renderConfig() {
 
 function renderStates() {
   const container = document.getElementById("state-chips");
-  const chips = Array.from(stateUsage).sort();
+  const order = ["NEW", "READY", "RUNNING", "BLOCKED", "SUSPEND READY", "SUSPEND BLOCKED", "TERMINATED"];
+  const chips = Array.from(stateUsage).sort((a, b) => {
+    const idxA = order.indexOf(a);
+    const idxB = order.indexOf(b);
+    return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
+  });
   container.innerHTML = chips.map((state) => `<span>${state}</span>`).join("");
 }
 
@@ -1162,6 +1174,7 @@ function updateDetail(event) {
 function renderBankerState() {
   const availableGrid = document.getElementById("available-grid");
   const table = document.getElementById("banker-table");
+  const safeSeqGrid = document.getElementById("safe-sequence-grid");
 
   if (bankerState.available) {
     const labels = ["Solar", "Grid", "Battery"];
@@ -1174,6 +1187,12 @@ function renderBankerState() {
         </div>`
       )
       .join("");
+  }
+
+  if (safeSeqGrid && bankerState.safeSequence && bankerState.safeSequence.length > 0) {
+    safeSeqGrid.innerHTML = bankerState.safeSequence.map((p, index) => 
+      `<span class="safe-seq-chip">${p}</span>${index < bankerState.safeSequence.length - 1 ? '<span class="safe-seq-arrow">→</span>' : ''}`
+    ).join('');
   }
 
   table.innerHTML = bankerState.processes

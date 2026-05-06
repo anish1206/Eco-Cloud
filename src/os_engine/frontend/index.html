@@ -40,7 +40,7 @@
         <div class="panel-card">
           <h3>Process States Used</h3>
           <div class="state-chips" id="state-chips"></div>
-          <img class="state-diagram" src="public/image.png" alt="Process state transitions" />
+          <img class="state-diagram" src="public/imagecd.png" alt="Process state transitions" />
         </div>
       </div>
     </section>
@@ -127,6 +127,23 @@
             <div class="queue-consumer">Consumer</div>
           </div>
           <div class="concept-detail" id="queue-details"></div>
+        </article>
+        <article class="concept-card">
+          <h3>Memory Allocation Strategies</h3>
+          <p>Variable partition allocates jobs to memory using Best-Fit or First-Fit algorithms, dynamically assigning space to incoming processes.</p>
+          <div class="concept-visual mem-fit-visual" aria-hidden="true" style="display: flex; gap: 4px; height: 32px;">
+            <div style="flex: 2; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.6); border-radius: 4px; height: 100%;"></div>
+            <div style="flex: 1; background: repeating-linear-gradient(45deg, rgba(245,158,11,0.2), rgba(245,158,11,0.2) 4px, rgba(245,158,11,0.4) 4px, rgba(245,158,11,0.4) 8px); border-radius: 4px; height: 100%;"></div>
+          </div>
+        </article>
+        <article class="concept-card">
+          <h3>Fragmentation & Compaction</h3>
+          <p>Internal fragmentation wastes space inside a partition. External fragmentation creates scattered holes, which Compaction merges into one contiguous block.</p>
+          <div class="concept-visual mem-comp-visual" aria-hidden="true" style="display: flex; gap: 4px; height: 32px;">
+            <div style="flex: 1; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; height: 100%;"></div>
+            <div style="flex: 1.5; background: rgba(14,203,129,0.2); border: 1px solid rgba(14,203,129,0.6); border-radius: 4px; height: 100%;"></div>
+            <div style="flex: 1; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; height: 100%;"></div>
+          </div>
         </article>
       </div>
     </section>
@@ -216,6 +233,11 @@
               <tbody id="banker-table"></tbody>
             </table>
           </div>
+        </div>
+        <div class="panel-card" style="grid-column: 1 / -1;">
+          <h3>Safe Sequence</h3>
+          <p class="mem-desc">The order in which processes can finish without causing a deadlock.</p>
+          <div class="safe-sequence-container" id="safe-sequence-grid"></div>
         </div>
       </div>
     </section>

@@ -1187,6 +1187,35 @@ td {
   }
 }
 
+/* Safe Sequence */
+.safe-sequence-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--surface-elevated-dark);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--hairline-on-dark);
+}
+
+.safe-seq-chip {
+  padding: 6px 14px;
+  background: rgba(14,203,129,0.15);
+  border: 1px solid rgba(14,203,129,0.5);
+  color: var(--trading-up);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-number);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.safe-seq-arrow {
+  color: var(--muted);
+  font-size: 16px;
+}
+
 @media (max-width: 720px) {
   .hero-content h1 {
     font-size: 38px;
