@@ -70,6 +70,188 @@ static int compute_rr_quantum(const int* burst_times, int count) {
     return quantum;
 }
 
+// --- MEMORY MANAGEMENT (Frontend Integration) ---
+#define MAX_MEM_BLOCKS 50
+
+typedef struct {
+    int start_addr;
+    int size;
+    int is_free;
+    int process_id;
+} MemBlock;
+
+typedef struct {
+    int total_memory;
+    int free_memory;
+    int is_fragmented;
+    MemBlock blocks[MAX_MEM_BLOCKS];
+    int num_blocks;
+} MemoryManager;
+
+// Initial state: One large free block of memory
+MemoryManager mem_manager = {
+    .total_memory = 10240,
+    .free_memory = 10240,
+    .is_fragmented = 0,
+    .blocks = {{0, 10240, 1, -1}},
+    .num_blocks = 1
+};
+
+// First-Fit Memory Allocator
+int sim_allocate_memory(PCB* job, int kb_needed) {
+    pthread_mutex_lock(&print_mutex);
+    printf("      -> [MEMORY] Process %d requesting %d KB\n", job->process_id, kb_needed);
+    
+    // Find first fit
+    for (int i = 0; i < mem_manager.num_blocks; i++) {
+        if (mem_manager.blocks[i].is_free && mem_manager.blocks[i].size >= kb_needed) {
+            // Found a block, allocate it
+            int remaining = mem_manager.blocks[i].size - kb_needed;
+            mem_manager.blocks[i].is_free = 0;
+            mem_manager.blocks[i].size = kb_needed;
+            mem_manager.blocks[i].process_id = job->process_id;
+            mem_manager.free_memory -= kb_needed;
+            
+            // If there's leftover space, split the block and create a new free block
+            if (remaining > 0 && mem_manager.num_blocks < MAX_MEM_BLOCKS) {
+                // Shift downstream blocks
+                for (int j = mem_manager.num_blocks; j > i + 1; j--) {
+                    mem_manager.blocks[j] = mem_manager.blocks[j - 1];
+                }
+                mem_manager.blocks[i + 1].start_addr = mem_manager.blocks[i].start_addr + kb_needed;
+                mem_manager.blocks[i + 1].size = remaining;
+                mem_manager.blocks[i + 1].is_free = 1;
+                mem_manager.blocks[i + 1].process_id = -1;
+                mem_manager.num_blocks++;
+            }
+            printf("      -> [MEMORY] Allocated %d KB at offset %d\n", kb_needed, mem_manager.blocks[i].start_addr);
+            pthread_mutex_unlock(&print_mutex);
+            return 1; // Success
+        }
+    }
+    
+    // Check for fragmentation
+    if (mem_manager.free_memory >= kb_needed) {
+        mem_manager.is_fragmented = 1;
+        printf("      -> [MEMORY] Allocation FAILED! Memory is fragmented.\n");
+    } else {
+        printf("      -> [MEMORY] Allocation FAILED! Out of memory.\n");
+    }
+    pthread_mutex_unlock(&print_mutex);
+    return 0; // Failed
+}
+
+// Best-Fit Memory Allocator
+int sim_allocate_memory_best_fit(PCB* job, int kb_needed) {
+    pthread_mutex_lock(&print_mutex);
+    printf("      -> [MEMORY] Process %d requesting %d KB (Best-Fit)\n", job->process_id, kb_needed);
+    
+    int best_idx = -1;
+    int min_diff = -1;
+    
+    // Find best fit
+    for (int i = 0; i < mem_manager.num_blocks; i++) {
+        if (mem_manager.blocks[i].is_free && mem_manager.blocks[i].size >= kb_needed) {
+            int diff = mem_manager.blocks[i].size - kb_needed;
+            if (best_idx == -1 || diff < min_diff) {
+                best_idx = i;
+                min_diff = diff;
+            }
+        }
+    }
+    
+    if (best_idx != -1) {
+        int i = best_idx;
+        int remaining = mem_manager.blocks[i].size - kb_needed;
+        mem_manager.blocks[i].is_free = 0;
+        mem_manager.blocks[i].size = kb_needed;
+        mem_manager.blocks[i].process_id = job->process_id;
+        mem_manager.free_memory -= kb_needed;
+        
+        // If there's leftover space, split the block and create a new free block
+        if (remaining > 0 && mem_manager.num_blocks < MAX_MEM_BLOCKS) {
+            // Shift downstream blocks
+            for (int j = mem_manager.num_blocks; j > i + 1; j--) {
+                mem_manager.blocks[j] = mem_manager.blocks[j - 1];
+            }
+            mem_manager.blocks[i + 1].start_addr = mem_manager.blocks[i].start_addr + kb_needed;
+            mem_manager.blocks[i + 1].size = remaining;
+            mem_manager.blocks[i + 1].is_free = 1;
+            mem_manager.blocks[i + 1].process_id = -1;
+            mem_manager.num_blocks++;
+        }
+        printf("      -> [MEMORY] Allocated %d KB at offset %d\n", kb_needed, mem_manager.blocks[i].start_addr);
+        pthread_mutex_unlock(&print_mutex);
+        return 1; // Success
+    }
+    
+    // Check for fragmentation
+    if (mem_manager.free_memory >= kb_needed) {
+        mem_manager.is_fragmented = 1;
+        printf("      -> [MEMORY] Allocation FAILED! Memory is fragmented.\n");
+    } else {
+        printf("      -> [MEMORY] Allocation FAILED! Out of memory.\n");
+    }
+    pthread_mutex_unlock(&print_mutex);
+    return 0; // Failed
+}
+
+// Free memory without coalescing (to intentionally allow fragmentation for the simulation)
+void sim_free_memory(PCB* job) {
+    pthread_mutex_lock(&print_mutex);
+    int freed = 0;
+    for (int i = 0; i < mem_manager.num_blocks; i++) {
+        if (!mem_manager.blocks[i].is_free && mem_manager.blocks[i].process_id == job->process_id) {
+            mem_manager.blocks[i].is_free = 1;
+            mem_manager.blocks[i].process_id = -1;
+            mem_manager.free_memory += mem_manager.blocks[i].size;
+            freed += mem_manager.blocks[i].size;
+        }
+    }
+    if (freed > 0) {
+        printf("      -> [MEMORY] Freed %d KB for Process %d\n", freed, job->process_id);
+    }
+    pthread_mutex_unlock(&print_mutex);
+}
+
+// Compaction: Merge all free blocks to resolve fragmentation
+void sim_compact_memory() {
+    pthread_mutex_lock(&print_mutex);
+    printf("      -> [MEMORY] Starting Compaction...\n");
+    int current_offset = 0;
+    int active_blocks = 0;
+    
+    // Push all allocated blocks to the front
+    for (int i = 0; i < mem_manager.num_blocks; i++) {
+        if (!mem_manager.blocks[i].is_free) {
+            mem_manager.blocks[active_blocks] = mem_manager.blocks[i];
+            mem_manager.blocks[active_blocks].start_addr = current_offset;
+            current_offset += mem_manager.blocks[active_blocks].size;
+            active_blocks++;
+        }
+    }
+    
+    // Create one large free block at the end
+    if (mem_manager.free_memory > 0 && active_blocks < MAX_MEM_BLOCKS) {
+        mem_manager.blocks[active_blocks].start_addr = current_offset;
+        mem_manager.blocks[active_blocks].size = mem_manager.free_memory;
+        mem_manager.blocks[active_blocks].is_free = 1;
+        mem_manager.blocks[active_blocks].process_id = -1;
+        active_blocks++;
+    }
+    
+    // Clear out remaining array elements for cleanliness
+    for (int i = active_blocks; i < MAX_MEM_BLOCKS; i++) {
+        mem_manager.blocks[i].size = 0;
+        mem_manager.blocks[i].is_free = 0;
+    }
+    
+    mem_manager.num_blocks = active_blocks;
+    mem_manager.is_fragmented = 0;
+    printf("      -> [MEMORY] Compaction Complete. Contiguous free memory: %d KB\n", mem_manager.free_memory);
+    pthread_mutex_unlock(&print_mutex);
+}
+
 // --- SYSTEM CALL SIMULATION (Using Banker's Algorithm) ---
 void sim_request_resource(PCB* job, int watts_needed, int core_id) {
     (void)core_id;
