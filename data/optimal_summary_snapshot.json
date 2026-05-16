@@ -1,0 +1,21 @@
+{
+  "best_label": "",
+  "best_score": 0.0,
+  "best_cfg": {
+    "hard_wait_guard": 0.6684,
+    "soft_wait_guard": 0.4512,
+    "green_weight": 0.0236,
+    "soft_penalty_carbon": 0.0667,
+    "soft_penalty_carbon_guarded": 0.0214,
+    "bonus_scale": 0.9441,
+    "model_weights": {
+      "rf": 0.5891589158915891,
+      "et": 0.20662066206620663,
+      "gb": 0.17511751175117513,
+      "lr": 0.029102910291029103
+    }
+  },
+  "failure_gap_mean": 0.0015625000000000153,
+  "failure_gap_worst": 0.8,
+  "failure_gap_best": -0.8
+}

@@ -1,0 +1,17 @@
+noise_pct,congestion,capacity,policy,n,overall_score_mean,overall_score_std,carbon_per_completed_job_mean,avg_jct_mean,tail_jct_mean
+10.0,high,6,ml_ensemble_green,4,0.4375,0.1315,0.33706,1.41976,6.0125
+10.0,high,6,srtf,4,0.5625,0.1315,0.34,1.258,5.84167
+10.0,high,8,ml_ensemble_green,4,0.4625,0.24622,0.41164,1.16986,5.71146
+10.0,high,8,srtf,4,0.5375,0.24622,0.41337,1.10233,5.62292
+10.0,moderate,6,ml_ensemble_green,4,0.4875,0.125,0.44959,1.1317,5.63437
+10.0,moderate,6,srtf,4,0.5125,0.125,0.45592,1.04166,5.33125
+10.0,moderate,8,ml_ensemble_green,4,0.4875,0.125,0.53779,1.1907,5.61146
+10.0,moderate,8,srtf,4,0.5125,0.125,0.5529,0.99095,4.93542
+20.0,high,6,ml_ensemble_green,4,0.55,0.33417,0.33728,1.37068,5.96562
+20.0,high,6,srtf,4,0.3875,0.37942,0.33881,1.258,5.84167
+20.0,high,8,ml_ensemble_green,4,0.575,0.05,0.41066,1.17102,5.79167
+20.0,high,8,srtf,4,0.425,0.05,0.41218,1.10233,5.62292
+20.0,moderate,6,ml_ensemble_green,4,0.4875,0.125,0.44554,1.1276,5.59792
+20.0,moderate,6,srtf,4,0.5125,0.125,0.45353,1.04166,5.33125
+20.0,moderate,8,ml_ensemble_green,4,0.4875,0.125,0.53431,1.16649,5.5375
+20.0,moderate,8,srtf,4,0.5125,0.125,0.54966,0.99095,4.93542

@@ -1,0 +1,43 @@
+{
+  "ablation_best": {
+    "config": "Without GB",
+    "overall_score_mean": 0.3853784457878766,
+    "overall_score_ci": 0.1431160304783734
+  },
+  "generalization_policy_means": [
+    {
+      "policy": "ml_ensemble_green",
+      "overall_score_mean": 0.496875,
+      "carbon_per_completed_job_mean": 0.43298375,
+      "avg_jct_mean": 1.21847625,
+      "tail_jct_mean": 5.7328125
+    },
+    {
+      "policy": "srtf",
+      "overall_score_mean": 0.4953125,
+      "carbon_per_completed_job_mean": 0.43954625,
+      "avg_jct_mean": 1.098235,
+      "tail_jct_mean": 5.432815
+    }
+  ],
+  "failure_stats": {
+    "gap_mean": 0.0015625000000000153,
+    "gap_std": 0.3356467937598843,
+    "gap_best": -0.8,
+    "gap_worst": 0.8,
+    "ensemble_worse_ratio": 0.75
+  },
+  "overhead": {
+    "ensemble_mean_ms": 45.68592567443848,
+    "heuristic_mean_ms": 0.0116757869720458,
+    "ratio": 3912.8776316165963
+  },
+  "tuning_best": {
+    "label": "base",
+    "excluded": "none",
+    "overall_score_mean": 0.0,
+    "carbon_per_completed_job_mean": 0.435612171497792,
+    "avg_jct_mean": 1.2621595595661117,
+    "tail_jct_mean": 5.435416666666662
+  }
+}
