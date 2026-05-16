@@ -630,6 +630,28 @@ A robust academic paper must humbly acknowledge its boundaries. The following li
 
 ---
 
+## Part 16: Defending Against Common Reviewer Attacks (Red Flags)
+
+When submitting to top-tier systems venues (NSDI, OSDI, EuroSys), "Reviewer 2" will aggressively hunt for areas where the simulation diverges from physical reality. You must preemptively address these four common attacks in your text:
+
+### 1. The "Custom Simulator" Problem
+* **The Attack:** "The authors evaluated their model entirely on a custom Python simulator. However, Python math does not account for actual OS kernel queues, Kubernetes pod spin-up times, or network I/O blockages. How do we know this works on a real cluster?"
+* **The Defense:** Explicitly state in the paper that this is a **simulation-based feasibility study**. Emphasize that your simulation uses highly realistic mathematical constraints (like the exact 68.42ms wall-clock inference overhead measured on a T4 GPU), but admit in the limitations that future work involves integrating the ensemble into a live orchestrator like Kubernetes (K8s) or Apache YARN.
+
+### 2. The Power Model Assumption
+* **The Attack:** "The paper calculates energy using a custom mathematical formula ($E_{dynamic} = 0.012 \times d^{1.16} \dots$). But real physical servers do not perfectly follow formulas. Did the authors validate this energy math using physical power meters on a real rack?"
+* **The Defense:** Acknowledge that the mathematical formula is an **empirical approximation**. You must state that the formula was constructed to mathematically mimic the super-linear power scaling behavior widely documented in foundational systems literature (such as Barroso & Hölzle's "The Case for Energy-Proportional Computing"). Acknowledge in the limitations that exact carbon savings will vary on physical silicon due to hardware-specific thermal throttling.
+
+### 3. The "Old Google Trace" Critique
+* **The Attack:** "The baseline data is derived from the old Google Cluster Trace. Today's datacenters are dominated by Generative AI (LLMs) and serverless functions. Does this model even apply to modern bursty workloads?"
+* **The Defense:** Point out that your `v2_realworld` dataset explicitly injected **"Bursty Arrival Patterns"** (where $\lambda$ jumps by 1.8x) to mathematically simulate the highly chaotic, bursty nature of modern AI and serverless workloads, bridging the gap between old traces and modern cloud realities.
+
+### 4. Missing Comparison to State-of-the-Art Deep RL
+* **The Attack:** "The authors compare their Ensemble model primarily against SRTF (a heuristic). Why didn't they compare it against state-of-the-art Deep Reinforcement Learning (DRL) schedulers?"
+* **The Defense:** Dedicate a paragraph explicitly stating: *"While Deep Reinforcement Learning (DRL) is popular in scheduling literature, DRL models are notoriously brittle, unstable during distribution shifts, and function as un-debuggable black-boxes. Our Ensemble approach was chosen specifically because it provides the predictive power of Machine Learning while retaining the deterministic, explainable safety of traditional heuristics (yielding a 0% catastrophic failure rate)."*
+
+---
+
 ## Conclusion
 
 The Green-First Ensemble Meta-Scheduler represents a **research-grade, publication-ready solution** to multi-objective datacenter scheduling. With comprehensive ablation, generalization, failure analysis, and computational validation, the paper is positioned for acceptance at top-tier venues (NSDI, OSDI, Eurosys, or ACM SOCC).
