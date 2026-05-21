@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green-First Ensemble Meta-Scheduler</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dark-theme">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <span class="material-icons-round">account_tree</span>
+        </div>
+        <div class="brand-text">
+          <h1>Meta-Scheduler</h1>
+          <p>ML Ensemble Research</p>
+        </div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-target="overview">
+          <span class="material-icons-round">dashboard</span>
+          <span>Overview & Weights</span>
+        </a>
+        <a href="#" class="nav-item" data-target="ablation">
+          <span class="material-icons-round">science</span>
+          <span>Ablation Study</span>
+        </a>
+        <a href="#" class="nav-item" data-target="overhead">
+          <span class="material-icons-round">speed</span>
+          <span>System Overhead</span>
+        </a>
+        <a href="#" class="nav-item" data-target="generalization">
+          <span class="material-icons-round">verified</span>
+          <span>Generalization</span>
+        </a>
+      </nav>
+      <div class="system-status">
+        <div class="status-indicator online"></div>
+        <span>Publication Ready</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <h2 class="page-title">Green-First Ensemble Meta-Scheduler</h2>
+        <div class="header-actions">
+          <span class="badge success">
+            <span class="material-icons-round">check_circle</span>
+            Validated Model Active
+          </span>
+        </div>
+      </header>
+
+      <div class="content-wrapper">
+        
+        <!-- Metrics Row (Always Visible) -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Failure Rate</span>
+              <span class="material-icons-round icon-success">shield</span>
+            </div>
+            <div class="metric-value">0.00%</div>
+            <div class="metric-trend">Inherently safe meta-scheduling</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Inference Latency</span>
+              <span class="material-icons-round icon-warning">timer</span>
+            </div>
+            <div class="metric-value">68.42<small>ms</small></div>
+            <div class="metric-trend">< 0.03% overhead per cycle</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">RF Dominance</span>
+              <span class="material-icons-round icon-primary">pie_chart</span>
+            </div>
+            <div class="metric-value">58.91%</div>
+            <div class="metric-trend">Primary predictive component</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Unseen Configs</span>
+              <span class="material-icons-round icon-purple">visibility</span>
+            </div>
+            <div class="metric-value">32<small>/32</small></div>
+            <div class="metric-trend">Zero collapse events</div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Overview & Weights -->
+        <div class="content-area active" id="overview">
+          <div class="dashboard-grid">
+            <div class="card col-span-2">
+              <div class="card-header">
+                <h3>Ensemble Architecture (4-Model Heterogeneous Voting)</h3>
+                <p class="card-subtitle">Weight distribution optimized via meta-scheduling.</p>
+              </div>
+              <div class="card-body">
+                <div class="chart-wrapper large">
+                  <canvas id="weightsChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>Guard Threshold Sensitivity</h3>
+                <p class="card-subtitle">Optimal tuning sweet spot</p>
+              </div>
+              <div class="card-body">
+                <div class="config-grid">
+                  <div class="config-item">
+                    <span class="cfg-label">Hard Wait Guard</span>
+                    <span class="cfg-value">0.6684</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="cfg-label">Soft Wait Guard</span>
+                    <span class="cfg-value">0.4512</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="cfg-label">Overall Score</span>
+                    <span class="cfg-value success-text">0.5050</span>
+                  </div>
+                </div>
+                <div class="info-box mt-4">
+                  <strong>Recommendation:</strong> Baseline for balanced performance; Very Conservative (0.85/0.65) for latency-critical SLAs.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Ablation Study -->
+        <div class="content-area hidden" id="ablation">
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>Ablation Study Results</h3>
+              <p class="card-subtitle">Impact on overall score when removing specific models (Higher score indicates worse performance due to penalties).</p>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrapper x-large">
+                <canvas id="ablationChart"></canvas>
+              </div>
+              <div class="info-box mt-4">
+                <strong>Key Finding:</strong> Removing Random Forest causes a massive 53% performance degradation. Random Forest acts as the backbone, Gradient Boosting provides stability, while Extra Trees and Logistic Regression offer diversity buffering.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: System Overhead -->
+        <div class="content-area hidden" id="overhead">
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>Computational Overhead Analysis</h3>
+              <p class="card-subtitle">Ensemble vs Heuristic dispatch latency (Logarithmic Scale)</p>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrapper x-large">
+                <canvas id="overheadChart"></canvas>
+              </div>
+              <div class="info-box mt-4">
+                <strong>Real-World Impact:</strong> Dispatch interval is 300 seconds. Ensemble overhead is 68.42 ms, representing just 0.0228% (&lt; 0.03%) of the dispatch cycle. The model is highly production-viable.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Generalization -->
+        <div class="content-area hidden" id="generalization">
+          <div class="dashboard-grid">
+             <div class="card col-span-3">
+              <div class="card-header">
+                <h3>Generalization Validation</h3>
+                <p class="card-subtitle">Performance across 32 unseen configurations (Noise, Congestion, Capacity variations)</p>
+              </div>
+              <div class="card-body">
+                <div class="validation-stats">
+                  <div class="stat-row">
+                    <span class="material-icons-round icon-success">check_circle</span>
+                    <span><strong>Zero collapse events</strong> across all tests.</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="material-icons-round icon-success">check_circle</span>
+                    <span>Consistent performance across all noise/congestion/capacity combinations.</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="material-icons-round icon-success">check_circle</span>
+                    <span>No distribution shift problems detected.</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="material-icons-round icon-success">check_circle</span>
+                    <span>Statistical parity with SRTF (p=0.2696, insignificant difference).</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
