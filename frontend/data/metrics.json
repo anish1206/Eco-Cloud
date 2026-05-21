@@ -1,0 +1,9 @@
+{
+  "failure_rate": 0.00,
+  "inference_latency": 68.42,
+  "rf_dominance": 58.91,
+  "unseen_configs": 32,
+  "hard_wait_guard": 0.6684,
+  "soft_wait_guard": 0.4512,
+  "overall_score": 0.5050
+}

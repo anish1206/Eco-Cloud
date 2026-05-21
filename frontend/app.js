@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Tab Navigation Logic ---
     const navItems = document.querySelectorAll('.nav-item');
@@ -29,14 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
 
+    // Fetch data from JSON files
+    const [weightsData, ablationData, overheadData] = await Promise.all([
+        fetch('data/weights.json').then(res => res.json()),
+        fetch('data/ablation.json').then(res => res.json()),
+        fetch('data/overhead.json').then(res => res.json())
+    ]);
+
     // --- 1. Ensemble Weights (Doughnut Chart) ---
     const ctxWeights = document.getElementById('weightsChart').getContext('2d');
     new Chart(ctxWeights, {
         type: 'doughnut',
         data: {
-            labels: ['Random Forest', 'Extra Trees', 'Gradient Boosting', 'Logistic Regression'],
+            labels: weightsData.labels,
             datasets: [{
-                data: [0.5891, 0.2066, 0.1751, 0.0291],
+                data: weightsData.values,
                 backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'],
                 borderWidth: 0,
                 hoverOffset: 4
@@ -60,17 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 2. Ablation Study Results (Bar Chart) ---
-    // Data from PROJECT_COMPLETION_SUMMARY.md
     const ctxAblation = document.getElementById('ablationChart').getContext('2d');
     new Chart(ctxAblation, {
         type: 'bar',
         data: {
-            labels: ['Full Ensemble (Baseline)', 'Without ET', 'Without GB', 'Without LR', 'Without RF'],
+            labels: ablationData.labels,
             datasets: [{
                 label: 'Overall Score (Lower is Better)',
-                data: [0.3857, 0.3897, 0.4083, 0.3666, 0.5903],
-                backgroundColor: [
-                    '#3B82F6', // Baseline
                     'rgba(59, 130, 246, 0.5)',
                     'rgba(59, 130, 246, 0.5)',
                     'rgba(59, 130, 246, 0.5)',
